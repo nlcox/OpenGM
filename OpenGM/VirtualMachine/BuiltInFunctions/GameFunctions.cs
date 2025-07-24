@@ -748,7 +748,7 @@ public static class GameFunctions
     // scheduler_resolution_set
 
     [GMLFunction("point_in_rectangle")]
-    public static object point_in_rectangle(object?[] args)
+    public static object? point_in_rectangle(object?[] args)
     {
         var px = args[0].Conv<double>();
         var py = args[1].Conv<double>();
@@ -760,7 +760,30 @@ public static class GameFunctions
         return x1 <= px && px < x2 && y1 <= py && py <= y2;
     }
 
-    // point_in_triangle
+    [GMLFunction("point_in_triangle")]
+    public static object? point_in_triangle(object?[] args)
+    {
+        var v0x = args[6].Conv<double>() - args[2].Conv<double>();
+        var v1x = args[4].Conv<double>() - args[2].Conv<double>();
+        var v2x = args[0].Conv<double>() - args[2].Conv<double>();
+
+        var v0y = args[7].Conv<double>() - args[3].Conv<double>();
+        var v1y = args[5].Conv<double>() - args[3].Conv<double>();
+        var v2y = args[1].Conv<double>() - args[3].Conv<double>();
+
+        var dot00 = (v0x * v0x) + (v0y * v0y);
+        var dot01 = (v0x * v1x) + (v0y * v1y);
+        var dot02 = (v0x * v2x) + (v0y * v2y);
+        var dot11 = (v1x * v1x) + (v1y * v1y);
+        var dot12 = (v1x * v2x) + (v1y * v2y);
+
+        var inv_denom = 1.0 / (dot00 * dot11 - dot01 * dot01);
+
+        var u = (dot11 * dot02 - dot01 * dot12) * inv_denom;
+        var v = (dot00 * dot12 - dot01 * dot02) * inv_denom;
+
+        return (u >= 0.0) && (v >= 0.0) && (u + v < 1.0);
+    }
     // point_in_circle
 
     [GMLFunction("rectangle_in_rectangle")]
@@ -878,6 +901,18 @@ public static class GameFunctions
         return result;
     }
 
-    // rectangle_in_triangle
-    // rectangle_in_circle
+    [GMLFunction("rectangle_in_triangle", GMLFunctionFlags.Stub)]
+    public static object? rectangle_in_triangle(object?[] args)
+    {
+        // todo : implement
+        return 0;
+    }
+
+    [GMLFunction("rectangle_in_circle", GMLFunctionFlags.Stub)]
+    public static object? rectangle_in_circle(object?[] args)
+    {
+        // todo : implement
+        return 0;
+    }
+
 }

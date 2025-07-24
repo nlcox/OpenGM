@@ -535,7 +535,7 @@ public static class GameConverter
         {
             variableType = VariableType.Local;
         }
-        else if (context == "self")
+        else if (context == "self" || context == "undefined")
         {
             variableType = VariableType.Self;
         }

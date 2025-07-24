@@ -38,7 +38,14 @@ namespace OpenGM.VirtualMachine.BuiltInFunctions
 
         // display_get_frequency
         // display_get_orientation
-        // diplay_reset
+
+        [GMLFunction("display_reset")]
+        public static object display_reset(object?[] args)
+        {
+            // TODO : implement
+            return 0;
+        }
+
         // display_mouse_get_x
         // display_mouse_get_y
         // display_mouse_set
@@ -1594,6 +1601,9 @@ namespace OpenGM.VirtualMachine.BuiltInFunctions
         [GMLFunction("surface_free")]
         public static object? surface_free(object?[] args)
         {
+            if (args[0] == null)
+                return null;
+
             var surface = args[0].Conv<int>();
             SurfaceManager.FreeSurface(surface, false);
             return null;
@@ -1603,9 +1613,7 @@ namespace OpenGM.VirtualMachine.BuiltInFunctions
         public static object surface_exists(object?[] args)
         {
             if (args[0] == null)
-            {
                 return false;
-            }
 
             var surface = args[0].Conv<int>();
             return SurfaceManager.surface_exists(surface);
@@ -1722,7 +1730,14 @@ namespace OpenGM.VirtualMachine.BuiltInFunctions
         }
 
         // draw_surface_tiled_ext
-        // surface_save
+
+        [GMLFunction("surface_save")]
+        public static object? surface_save(object?[] args)
+        {
+            // todo : implement
+            return null;
+        }
+
         // surface_save_part
         // surface_getpixel
 
