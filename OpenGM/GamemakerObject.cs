@@ -26,7 +26,7 @@ public class GamemakerObject : DrawWithDepth, IStackContextSelf
     public ObjectDefinition Definition;
 
     public int object_index => Definition.AssetId;
-    public object?[] alarm = Enumerable.Repeat((object?)-1, 12).ToArray(); // doubles will be ArraySet here
+    public int[] alarm = Enumerable.Repeat(-1, 12).ToArray();
 
     public bool persistent = false;
 
@@ -185,14 +185,22 @@ public class GamemakerObject : DrawWithDepth, IStackContextSelf
                 return;
             }
 
-            _sprite_index = value;
-
-            if (value == -1)
+            if (value < 0)
             {
+                DebugLog.LogWarning($"Tried to set sprite_index of {Definition.Name} to {value}!");
                 return;
             }
 
+            _sprite_index = value;
+
             var sprite = SpriteManager.GetSpriteAsset(_sprite_index);
+
+            if (sprite == null)
+            {
+                DebugLog.LogWarning($"Couldn't find sprite for index {_sprite_index}!");
+                return;
+            }
+
             _cachedSpriteWidth = sprite!.Textures[0].TargetWidth;
             _cachedSpriteHeight = sprite.Textures[0].TargetHeight;
             _cached_sprite_xoffset = sprite.Origin.X;
@@ -579,15 +587,15 @@ public class GamemakerObject : DrawWithDepth, IStackContextSelf
     {
         for (var i = 0; i < alarm.Length; i++)
         {
-            if (alarm[i].Conv<int>() != -1)
+            if (alarm[i] != -1)
             {
-                alarm[i] = alarm[i].Conv<int>() - 1;
+                alarm[i]--;
 
-                if (alarm[i].Conv<int>() == 0)
+                if (alarm[i] == 0)
                 {
                     ExecuteEvent(this, Definition, EventType.Alarm, i);
 
-                    if (alarm[i].Conv<int>() == 0)
+                    if (alarm[i] == 0)
                     {
                         alarm[i] = -1;
                     }

@@ -83,8 +83,7 @@ public static class InstanceManager
     {
         var definition = ObjectDefinitions[obj];
 
-        // is 0 depth right? no idea
-        var newGM = new GamemakerObject(definition, x, y, 0, NextInstanceID++, definition.sprite, definition.visible, definition.persistent, definition.textureMaskId);
+        var newGM = new GamemakerObject(definition, x, y, definition.depth, NextInstanceID++, definition.sprite, definition.visible, definition.persistent, definition.textureMaskId);
 
         GamemakerObject.ExecuteEvent(newGM, definition, EventType.PreCreate);
         GamemakerObject.ExecuteEvent(newGM, definition, EventType.Create);
@@ -130,7 +129,7 @@ public static class InstanceManager
     {
         if (id == GMConstants.global)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException("Tried to find global instance.");
         }
         else if (id == GMConstants.self)
         {
@@ -142,7 +141,7 @@ public static class InstanceManager
         }
         else if (id < 0)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException($"Tried to find instance with id {id}");
         }
         else if (id < GMConstants.FIRST_INSTANCE_ID)
         {

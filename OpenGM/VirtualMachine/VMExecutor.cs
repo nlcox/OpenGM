@@ -25,13 +25,21 @@ public class VMEnvFrame
 
         if (Self is GamemakerObject gm)
         {
-            var ret = $"{gm.object_index} ({gm.instanceId})\r\nStack:";
-            /*
-            foreach (var item in Stack)
+            var ret = $"{gm.Definition.Name} ({gm.object_index}, instance {gm.instanceId})";
+            return ret;
+        }
+        else if (Self is GMLObject obj)
+        {
+            var ret = "GML Struct";
+            if (obj.SelfVariables.Count > 0)
             {
-                ret += $"- {item}\r\n";
+                var first = obj.SelfVariables.Keys.First();
+                ret += $" ({obj.SelfVariables.Count} entries, \"{first}\"...)";
             }
-            */
+            else
+            {
+                ret += " (no entries)";
+            }
 
             return ret;
         }
@@ -125,6 +133,7 @@ public static partial class VMExecutor
     }
 
     public static bool VerboseStackLogs;
+    public static bool ForceVerboseStackLogs = false;
     public static bool DebugMode;
     public static VMCodeInstruction? CurrentInstruction;
     
@@ -162,6 +171,15 @@ public static partial class VMExecutor
             return defaultReturnValue;
         }
 
+        var newCtx = new VMEnvFrame
+        {
+            Self = obj!,
+            ObjectDefinition = objectDefinition,
+        };
+
+        // Make the current object the current instance
+        EnvStack.Push(newCtx);
+
         if (VerboseStackLogs)
         {
             //if (!script.IsGlobalInit)
@@ -171,17 +189,17 @@ public static partial class VMExecutor
             var leftPadding = string.Concat(Enumerable.Repeat(space, count));
 
             DebugLog.LogInfo($"{leftPadding}------------------------------ {codeName} ------------------------------ ");
-            //}
+            DebugLog.LogInfo($"ENV STACK:");
+
+            var i = 1;
+            foreach (var env in EnvStack)
+            {
+                DebugLog.LogInfo($"{i}. {env?.ToString() ?? "null"}");
+                i++;
+            }
+
+            DebugLog.LogInfo($"");
         }
-
-        var newCtx = new VMEnvFrame
-        {
-            Self = obj!,
-            ObjectDefinition = objectDefinition,
-        };
-
-        // Make the current object the current instance
-        EnvStack.Push(newCtx);
 
         var call = new VMCallFrame
         {
@@ -223,6 +241,18 @@ public static partial class VMExecutor
                     var stackStr = "{ ";
                     foreach (var item in Call.Stack)
                     {
+                        if (item.value is string str)
+                        {
+                            if (str.Length > 80)
+                            {
+                                str = str[..80] + $"[{str.Length - 80} more characters...]";
+                                str = str.Replace("\n", "\\n");
+                            }
+
+                            stackStr += $"{str}, ";
+                            continue;
+                        }
+
                         stackStr += $"{item}, ";
                     }
 
@@ -619,7 +649,7 @@ public static partial class VMExecutor
             case VMOpcode.CALLV:
             {
                 var method = Call.Stack.Pop(VMType.v) as Method;
-                var self = Call.Stack.Pop(VMType.v).Conv<int>(); // TODO: if method.inst is null, use this as self (https://manual.gamemaker.io/lts/en/GameMaker_Language/GML_Reference/Variable_Functions/method_get_self.htm)
+                var self = Call.Stack.Pop(VMType.v);
 
                 var args = new object?[instruction.IntData];
 
@@ -632,6 +662,12 @@ public static partial class VMExecutor
                 if (method == null)
                 {
                     throw new NotImplementedException("method is null");
+                }
+
+                var context = method.inst;
+                if (method.inst is null && self is not null)
+                {
+                    context = FetchSelf(self);
                 }
 
                 //DebugLog.LogInfo($"CALLV {method.code.Name} self:{gmSelf.Definition.Name} argCount:{args.Length}");
@@ -697,6 +733,24 @@ public static partial class VMExecutor
         return (ExecutionResult.Success, null);
     }
 
+    public static IStackContextSelf? FetchSelf(object? value)
+    {
+        if (value is null)
+        {
+            throw new ArgumentException($"Trying to fetch IStackContextSelf for undefined! Current script:{CallStack.First().CodeName}");
+        }
+        else if (value is IStackContextSelf self)
+        {
+            return self;
+        }
+        else if (value is int or long or short)
+        {
+            return InstanceManager.Find((int)value);
+        }
+
+        throw new ArgumentException($"Don't know how to fetch IStackContextSelf for {value} ({value.GetType().FullName})");
+    }
+
     public static int VMTypeToSize(VMType type) => type switch
     {
         VMType.v => 16,
@@ -709,13 +763,27 @@ public static partial class VMExecutor
         _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
     };
 
+    public static object? DictHash(object? key)
+    {
+        var result = key;
+
+        switch (key)
+        {
+            case int or long or short or double or bool:
+                result = key.Conv<double>();
+                break;
+        }
+
+        return result;
+    }
+
     /// <summary>
     /// custom cast function.
     /// works with: all number types, string, bool, IList
     /// </summary>
     public static T Conv<T>(this object? @this) => (T)@this.Conv(typeof(T));
     
-    private static object Conv(this object? @this, Type type)
+    public static object Conv(this object? @this, Type type)
     {
         // TODO: check all numeric primitives
 
@@ -818,6 +886,11 @@ public static partial class VMExecutor
             if (type == typeof(bool)) return true; // methods are always evaluated to true i think?
         }
             
-        throw new ArgumentException($"Don't know how to convert {@this} ({@this.GetType().FullName}) to {type}");
+        throw new ArgumentException($"Don't know how to convert {@this} ({@this.GetType()}) to {type}");
     }
+
+    /// <summary>
+    /// Conv elements of array. Used instead of Cast because Cast does not convert types (e.g. int to float)
+    /// </summary>
+    public static IEnumerable<T> ConvAll<T>(this IEnumerable @this) => @this.Cast<object?>().Select(e => e.Conv<T>());
 }

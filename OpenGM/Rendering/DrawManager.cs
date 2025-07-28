@@ -163,7 +163,7 @@ public static class DrawManager
         // g_pLayerManager.UpdateLayers();
         // g_pSequenceManager.PerformInstanceEvents(g_RunRoom, EVENT_STEP_BEGIN);
 
-        var stepList = _drawObjects.OrderBy(x => x.instanceId);
+        var stepList = _drawObjects.Where(x => x is not GamemakerObject obj || obj.Active).OrderBy(x => x.instanceId);
         if (RunStepScript(stepList, EventSubtypeStep.BeginStep))
         {
             return;
@@ -448,8 +448,6 @@ public static class DrawManager
             return;
         }
         
-        GL.Uniform1(GraphicsManager.u_flipY, 0); // dont flip when not drawing to backbuffer
-
         SurfaceManager.SetApplicationSurface();
 
         if (SurfaceManager.UsingAppSurface)
@@ -594,8 +592,6 @@ public static class DrawManager
         }
 
         ViewportManager.CurrentRenderingView = null;
-
-        GL.Uniform1(GraphicsManager.u_flipY, 1); // flip when drawing to backbuffer
 
         /*
          * PostDraw

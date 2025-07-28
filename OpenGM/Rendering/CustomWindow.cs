@@ -13,6 +13,8 @@ public class CustomWindow : GameWindow
 
     public static List<GMBaseJob> DebugJobs = new();
 
+    public double DeltaTime = 0.0;
+
     public CustomWindow(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings)
         : base(gameWindowSettings, nativeWindowSettings)
     {
@@ -53,6 +55,8 @@ public class CustomWindow : GameWindow
     protected override void OnRenderFrame(FrameEventArgs args)
     {
         base.OnUpdateFrame(args);
+
+        DeltaTime = args.Time;
 
         ViewportManager.UpdateViews();
 
@@ -326,8 +330,8 @@ public class CustomWindow : GameWindow
         var xscale = partJob.scale.X;
         var yscale = partJob.scale.Y;
 
-        var sinAngle = Math.Sin(partJob.angle);
-        var cosAngle = Math.Cos(partJob.angle);
+        var sinAngle = Math.Sin(CustomMath.Deg2Rad * partJob.angle);
+        var cosAngle = Math.Cos(CustomMath.Deg2Rad * partJob.angle);
 
         double xUVOffset;
         var fVar7 = (double)partJob.texture.TargetX;

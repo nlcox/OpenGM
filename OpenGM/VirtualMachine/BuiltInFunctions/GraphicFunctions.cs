@@ -36,6 +36,18 @@ namespace OpenGM.VirtualMachine.BuiltInFunctions
             return Monitors.GetPrimaryMonitor().VerticalResolution;
         }
 
+        [GMLFunction("display_get_gui_width", GMLFunctionFlags.Stub)]
+        public static object display_get_gui_width(object?[] args)
+        {
+            return window_get_width(args);
+        }
+
+        [GMLFunction("display_get_gui_height", GMLFunctionFlags.Stub)]
+        public static object display_get_gui_height(object?[] args)
+        {
+            return window_get_height(args);
+        }
+
         // display_get_frequency
         // display_get_orientation
 
@@ -1304,7 +1316,7 @@ namespace OpenGM.VirtualMachine.BuiltInFunctions
             var colour = args[7].Conv<int>();
             var alpha = args[8].Conv<double>();
 
-            if (subimg == -1)
+            if (subimg == -1 && VMExecutor.Self.Self is GamemakerObject)
             {
                 subimg = (int)VMExecutor.Self.GMSelf.image_index;
             }
@@ -1649,7 +1661,11 @@ namespace OpenGM.VirtualMachine.BuiltInFunctions
             return -1;
         }
 
-        // surface_get_target
+        [GMLFunction("surface_get_target")]
+        public static object surface_get_target(object?[] args)
+        {
+            return SurfaceManager.surface_get_target();
+        }
 
         [GMLFunction("surface_set_target")]
         public static object surface_set_target(object?[] args)
