@@ -62,6 +62,7 @@ public static class Extensions
     {
         var length = @this.ReadInt32();
         var bytes = @this.ReadBytes(length);
+
         return MemoryPackSerializer.Deserialize<T>(bytes)!;
     }
 

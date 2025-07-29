@@ -180,21 +180,33 @@ public static class GameLoader
 
             foreach (var (subtype, codeId) in storage.AlarmScriptIDs)
             {
+                if (codeId <= -1)
+                    break;
+
                 asset.AlarmScript[subtype] = Codes[codeId];
             }
 
             foreach (var (subtype, codeId) in storage.StepScriptIDs)
             {
+                if (codeId <= -1)
+                    break;
+
                 asset.StepScript[subtype] = Codes[codeId];
             }
 
             foreach (var (subtype, codeId) in storage.CollisionScriptIDs)
             {
+                if (codeId <= -1)
+                    break;
+
                 asset.CollisionScript[subtype] = Codes[codeId];
             }
 
             foreach (var (subtype, codeId) in storage.KeyboardScriptIDs)
             {
+                if (codeId <= -1)
+                    break;
+
                 asset.KeyboardScripts[subtype] = Codes[codeId];
             }
 
@@ -202,21 +214,33 @@ public static class GameLoader
 
             foreach (var (subtype, codeId) in storage.OtherScriptIDs)
             {
+                if (codeId <= -1)
+                    break;
+
                 asset.OtherScript[subtype] = Codes[codeId];
             }
 
             foreach (var (subtype, codeId) in storage.DrawScriptIDs)
             {
+                if (codeId <= -1)
+                    break;
+
                 asset.DrawScript[subtype] = Codes[codeId];
             }
 
             foreach (var (subtype, codeId) in storage.KeyPressScriptIDs)
             {
+                if (codeId <= -1)
+                    break;
+
                 asset.KeyPressScripts[subtype] = Codes[codeId];
             }
 
             foreach (var (subtype, codeId) in storage.KeyReleaseScriptIDs)
             {
+                if (codeId <= -1)
+                    break;
+
                 asset.KeyReleaseScripts[subtype] = Codes[codeId];
             }
 

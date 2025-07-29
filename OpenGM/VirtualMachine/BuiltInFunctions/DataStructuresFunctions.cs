@@ -796,6 +796,12 @@ namespace OpenGM.VirtualMachine.BuiltInFunctions
 
         // ds_queue_copy
 
+        [GMLFunction("ds_stack_create")]
+        public static object? ds_stack_create(object?[] args)
+        {
+            return null;
+        }
+
         // ...
     }
 
