@@ -47,6 +47,18 @@ namespace OpenGM.VirtualMachine.BuiltInFunctions
         {
             return window_get_height(args);
         }
+    
+        [GMLFunction("display_get_dpi_x", GMLFunctionFlags.Stub)]
+        public static object display_get_dpi_x(object?[] args)
+        {
+            return 1;
+        }
+    
+        [GMLFunction("display_get_dpi_y", GMLFunctionFlags.Stub)]
+        public static object display_get_dpi_y(object?[] args)
+        {
+            return 1;
+        }
 
         // display_get_frequency
         // display_get_orientation
@@ -117,8 +129,17 @@ namespace OpenGM.VirtualMachine.BuiltInFunctions
             return CustomWindow.Instance.Title;
         }
 
-        // window_set_cursor
-        // window_get_cursor
+        [GMLFunction("window_set_cursor", GMLFunctionFlags.Stub)]
+        public static object? window_set_cursor(object?[] args)
+        {
+            return null;
+        }
+
+        [GMLFunction("window_get_cursor", GMLFunctionFlags.Stub)]
+        public static object? window_get_cursor(object?[] args)
+        {
+            return 0;
+        }
 
         [GMLFunction("window_set_color", GMLFunctionFlags.Stub)]
         [GMLFunction("window_set_colour", GMLFunctionFlags.Stub)]
@@ -187,6 +208,25 @@ namespace OpenGM.VirtualMachine.BuiltInFunctions
         public static object window_get_height(object?[] args)
         {
             return CustomWindow.Instance.ClientSize.Y;
+        }
+
+        [GMLFunction("window_has_focus", GMLFunctionFlags.Stub)]
+        public static object? window_has_focus(object?[] args)
+        {
+            return true;
+        }
+
+        // TODO: check if these are right
+        [GMLFunction("window_mouse_get_x")]
+        public static object? window_mouse_get_x(object?[] args)
+        {
+            return KeyboardHandler.MousePos.X;
+        }
+
+        [GMLFunction("window_mouse_get_y")]
+        public static object? window_mouse_get_y(object?[] args)
+        { 
+            return KeyboardHandler.MousePos.Y;
         }
 
         // window_get_visible_rects
@@ -1054,7 +1094,52 @@ namespace OpenGM.VirtualMachine.BuiltInFunctions
         }
 
         // font_get_uvs
-        // font_get_info
+
+        [GMLFunction("font_get_info")]
+        public static object? font_get_info(object?[] args)
+        {
+            var fontIndex = args[0].Conv<int>();
+            var font = TextManager.FontAssets.ElementAtOrDefault(fontIndex);
+
+            if (font is null)
+            {
+                return null;
+            }
+
+            // TODO: make these properties actually correct
+            var result = new GMLObject();
+            result.SelfVariables["ascender"] = 0;
+            result.SelfVariables["ascenderOffset"] = 0;
+            result.SelfVariables["size"] = font.Size;
+            result.SelfVariables["spriteIndex"] = font.spriteIndex;
+            result.SelfVariables["texture"] = font.texture;
+            result.SelfVariables["name"] = font.name;
+            result.SelfVariables["bold"] = false;
+            result.SelfVariables["italic"] = false;
+
+            var glyphs = new GMLObject();
+
+            foreach (var (glyph, info) in font.entriesDict)
+            {
+                var gmlGlyph = new GMLObject();
+                gmlGlyph.SelfVariables["char"] = info.characterIndex;
+                gmlGlyph.SelfVariables["x"] = info.x;
+                gmlGlyph.SelfVariables["y"] = info.y;
+                gmlGlyph.SelfVariables["w"] = info.w;
+                gmlGlyph.SelfVariables["h"] = info.h;
+                gmlGlyph.SelfVariables["shift"] = info.shift;
+                gmlGlyph.SelfVariables["offset"] = info.xOffset;
+                gmlGlyph.SelfVariables["kerning"] = new List<object?>();
+
+                var character = ((char)glyph).ToString();
+                glyphs.SelfVariables[character] = gmlGlyph;
+            }
+
+            result.SelfVariables["glyphs"] = glyphs;
+
+            return result;
+        }
+        
         // font_cache_glyph
 
         [GMLFunction("sprite_get_texture", GMLFunctionFlags.Stub, stubLogType: DebugLog.LogType.Warning)]
@@ -1528,14 +1613,17 @@ namespace OpenGM.VirtualMachine.BuiltInFunctions
 
             var spriteTex = SpriteManager.GetSpritePageItem(sprite, subimg);
 
-            var sizeWidth = spriteTex.TargetWidth;
-            var sizeHeight = spriteTex.TargetHeight;
+            var sizeWidth = spriteTex.TargetWidth * xscale;
+            var sizeHeight = spriteTex.TargetHeight * yscale;
 
             var tempX = x;
             var tempY = y;
 
-            var viewTopLeftX = ViewportManager.CurrentRenderingView!.ViewPosition.X;
-            var viewTopLeftY = ViewportManager.CurrentRenderingView!.ViewPosition.Y;
+            var viewTopLeftX = ViewportManager.CurrentRenderingView?.ViewPosition.X ?? 0;
+            var viewTopLeftY = ViewportManager.CurrentRenderingView?.ViewPosition.Y ?? 0;
+
+            var viewSizeX = ViewportManager.CurrentRenderingView?.ViewSize.X ?? RoomManager.CurrentRoom.SizeX;
+            var viewSizeY = ViewportManager.CurrentRenderingView?.ViewSize.Y ?? RoomManager.CurrentRoom.SizeY;
 
             while (tempX > viewTopLeftX)
             {
@@ -1552,8 +1640,8 @@ namespace OpenGM.VirtualMachine.BuiltInFunctions
             var xOffscreenValue = viewTopLeftX - tempX;
             var yOffscreenValue = viewTopLeftY - tempY;
 
-            var countToDrawHoriz = CustomMath.CeilToInt((ViewportManager.CurrentRenderingView!.ViewSize.X + (float)xOffscreenValue) / sizeWidth);
-            var countToDrawVert = CustomMath.CeilToInt((ViewportManager.CurrentRenderingView!.ViewSize.Y + (float)yOffscreenValue) / sizeHeight);
+            var countToDrawHoriz = CustomMath.CeilToInt((viewSizeX + (float)xOffscreenValue) / sizeWidth);
+            var countToDrawVert = CustomMath.CeilToInt((viewSizeY + (float)yOffscreenValue) / sizeHeight);
 
             for (var i = 0; i < countToDrawVert; i++)
             {

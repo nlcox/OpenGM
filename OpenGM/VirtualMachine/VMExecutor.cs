@@ -30,18 +30,7 @@ public class VMEnvFrame
         }
         else if (Self is GMLObject obj)
         {
-            var ret = "GML Struct";
-            if (obj.SelfVariables.Count > 0)
-            {
-                var first = obj.SelfVariables.Keys.First();
-                ret += $" ({obj.SelfVariables.Count} entries, \"{first}\"...)";
-            }
-            else
-            {
-                ret += " (no entries)";
-            }
-
-            return ret;
+            return "[" + obj.ToString() + "]";
         }
         else
         {
@@ -612,8 +601,7 @@ public static partial class VMExecutor
                 
                 // by the magic of reference types this will be set properly
                 VariableResolver.ArraySet(index, value,
-                    () => array,
-                    _ => throw new UnreachableException("this is called when getter is null"));
+                    () => array);
 
                 break;
             }
@@ -672,7 +660,7 @@ public static partial class VMExecutor
 
                 //DebugLog.LogInfo($"CALLV {method.code.Name} self:{gmSelf.Definition.Name} argCount:{args.Length}");
 
-                Call.Stack.Push(ExecuteCode(method.func.GetCode(), method.inst, method.inst is GamemakerObject gml ? gml.Definition : null, args: args), VMType.v);
+                Call.Stack.Push(ExecuteCode(method.func.GetCode(), context, method.inst is GamemakerObject gml ? gml.Definition : null, args: args), VMType.v);
 
                 break;
             }
@@ -745,7 +733,7 @@ public static partial class VMExecutor
         }
         else if (value is int or long or short)
         {
-            return InstanceManager.Find((int)value);
+            return InstanceManager.Find((int)value, all: true);
         }
 
         throw new ArgumentException($"Don't know how to fetch IStackContextSelf for {value} ({value.GetType().FullName})");
